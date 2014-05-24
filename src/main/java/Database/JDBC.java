@@ -9,41 +9,35 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class JDBC {
 
 	private Connection conn = null;
-
-	public JDBC() {
-		/*try {
-			// log
-			//DriverManager.registerDriver(new oracle.jdbc.OracleDriver());
-			System.out.println("register driver");
-			// log
-		} catch (SQLException e) {
-			e.printStackTrace();
-			throw new ExceptionInInitializerError(e);
-			// log
-		}*/
-	}
+	private Logger logger = LoggerFactory.getLogger(JDBC.class);
 
 	public void open() {
 		try {
-			System.out.println("kapcsolat nyitás...");
+			logger.info("try to open a connetcion with the server");
 			conn = DriverManager.getConnection(
 					"jdbc:oracle:thin:@db.inf.unideb.hu:1521:ora11g",
 					"h_D8J55L", "ScKr64MaLa");
-			// log
+			logger.info("connection opened succesfully");
 
 		} catch (SQLException e) {
 			e.printStackTrace();
+			logger.error("connection could be opened cause of:\n"
+					+ e.getMessage());
 		}
 	}
 
 	public void close() {
-		System.out.println("kapcsolat zárás...");
+		logger.info("connection closing");
 		try {
 			conn.close();
 		} catch (SQLException e) {
+			logger.info("there is a problem while tried to close the connection");
 			e.printStackTrace();
 			System.out.println(e.getErrorCode());
 			System.out.println(e.getMessage());
@@ -80,52 +74,6 @@ public class JDBC {
 		return sum;
 	}
 
-	public void AddProductToWarehouse(Product product, Warehouse warehouse,
-			int piece) {
-
-		try {
-			PreparedStatement pst = conn
-					.prepareStatement("insert into Product(ID, NAME, PRICE, "
-							+ "MANUFACTURER_ID) values (product_id.NEXTVAL, ?, ?, ?)");
-
-			pst.setString(1, product.getName());
-			pst.setInt(2, product.getPrice());
-			pst.setInt(3, product.getManufacturerID());
-
-			pst.executeUpdate();
-
-			PreparedStatement pst4 = conn
-					.prepareStatement("insert into CONTAIN(PRODUCT_ID, WAREHOUSE_ID, PIECE) "
-							+ "values((select ID FROM PRODUCT where NAME = ? and PRICE = ? and MANUFACTURER_ID = ?),"
-							+ " ?,?)");
-			pst4.setString(1, product.getName());
-			pst4.setInt(2, product.getPrice());
-			pst4.setInt(3, product.getManufacturerID());
-			pst4.setInt(4, warehouse.getId());
-			pst4.setInt(5, piece);
-			pst4.executeUpdate();
-
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-
-	}
-
-	public void addContain(Warehouse warehouse, Product product, int piece) {
-		try {
-			PreparedStatement pst = conn
-					.prepareStatement("insert into contain values(?, ?, ?)");
-			pst.setInt(1, product.getId());
-			pst.setInt(2, warehouse.getId());
-			pst.setInt(3, piece);
-
-			pst.executeUpdate();
-
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-	}
-
 	public List<Contain> getContainsFromProductSearch(Product product) {
 
 		List<Contain> contains = new ArrayList<Contain>();
@@ -141,36 +89,11 @@ public class JDBC {
 						.getInt("WAREHOUSE_ID"), rs.getInt("PIECE")));
 			}
 		} catch (SQLException e) {
+			logger.error("there was a problem in the getContainsFromProductSearch function");
 			e.printStackTrace();
 		}
 
 		return contains;
-	}
-
-	public void addWarehouse(Warehouse warehouse) {
-
-		try {
-			PreparedStatement pst = conn
-					.prepareStatement("insert into WAREHOUSE values(warehouse_id.NEXTVAL, ?)");
-			pst.setString(1, warehouse.getName());
-			pst.executeUpdate();
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-
-	}
-
-	public void addManufacturer(String manufacturer) {
-
-		try {
-			PreparedStatement pst = conn
-					.prepareStatement("insert into MANUFACTURER values(manufacturer_id.NEXTVAL, ?)");
-			pst.setString(1, manufacturer);
-			pst.executeQuery();
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-
 	}
 
 	public List<Product> getProductsFromWarehouse(String warehouse) {
@@ -233,7 +156,7 @@ public class JDBC {
 		return manufacturers;
 	}
 
-	public Manufacturer getManufacturerNameById(int man_id) {
+	public Manufacturer getManufacturerById(int man_id) {
 
 		Manufacturer manufacturer = new Manufacturer();
 		try {
@@ -252,7 +175,7 @@ public class JDBC {
 		return manufacturer;
 	}
 
-	public Warehouse getWarehouseNameById(int war_id) {
+	public Warehouse getWarehouseById(int war_id) {
 
 		Warehouse warehouse = new Warehouse();
 		try {
@@ -269,6 +192,43 @@ public class JDBC {
 		}
 
 		return warehouse;
+	}
+	
+	public Warehouse getWarehouseByName(String name) {
+
+		Warehouse warehouse = new Warehouse();
+		try {
+			PreparedStatement pst = conn
+					.prepareStatement("select ID, NAME from WAREHOUSE where NAME = ?");
+			pst.setString(1, name);
+			ResultSet rs = pst.executeQuery();
+
+			rs.next();
+			warehouse = new Warehouse(rs.getInt("ID"), rs.getString("NAME"));
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+		return warehouse;
+	}
+	
+	public Manufacturer getManufacturerIdByName(String name) {
+		Manufacturer manufacturer = new Manufacturer();
+		try {
+			PreparedStatement pst = conn
+					.prepareStatement("select id, name from MANUFACTURER where name = ?");
+			pst.setString(1, name);
+
+			ResultSet rs = pst.executeQuery();
+			rs.next();
+			manufacturer = new Manufacturer(rs.getInt("id"),
+					rs.getString("name"));
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+		return manufacturer;
 	}
 
 	public Product getProductByName(String productName) {
@@ -290,25 +250,7 @@ public class JDBC {
 		return product;
 	}
 
-	public int getManufacturerIdByName(String name) {
-
-		int id = 0;
-		try {
-			PreparedStatement pst = conn
-					.prepareStatement("select id from MANUFACTURER where name = ?");
-			pst.setString(1, name);
-
-			ResultSet rs = pst.executeQuery();
-			rs.next();
-			id = rs.getInt("id");
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-
-		return id;
-	}
-
-	public int getPieceFromWarehouseWithProduct(Warehouse warehouse,
+	public Integer getPieceFromWarehouseWithProduct(Warehouse warehouse,
 			Product product) {
 
 		int piece = 0;
@@ -331,25 +273,6 @@ public class JDBC {
 		}
 
 		return piece;
-	}
-
-	public Warehouse getWarehouseByName(String name) {
-
-		Warehouse warehouse = new Warehouse();
-		try {
-			PreparedStatement pst = conn
-					.prepareStatement("select ID, NAME from WAREHOUSE where NAME = ?");
-			pst.setString(1, name);
-			ResultSet rs = pst.executeQuery();
-
-			rs.next();
-			warehouse = new Warehouse(rs.getInt("ID"), rs.getString("NAME"));
-
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-
-		return warehouse;
 	}
 
 	public void deleteContain(Warehouse warehouse, Product product) {
@@ -386,31 +309,96 @@ public class JDBC {
 	public void moveProduct(Product product, Warehouse from, Warehouse to,
 			int piece) {
 		int pieceFrom = getPieceFromWarehouseWithProduct(from, product);
-		System.out.println("from: " + pieceFrom);
 		int pieceTo = getPieceFromWarehouseWithProduct(to, product);
-		System.out.println("to: " + pieceTo);
 
 		if (piece == pieceFrom) {
-			System.out.println("az eredeti helyrol elfogyott");
 			deleteContain(from, product);
 			if (pieceTo > 0) {
-				System.out.println("az uj helyen volt már");
 				changeProductPieceInWarehouse(to, product, piece);
 			} else {
-				System.out.println("az uj helyen nem volt még");
+
 				addContain(to, product, piece);
 			}
 
 		} else {
-			System.out.println("maradt még az eredeti helyen is");
 			changeProductPieceInWarehouse(from, product, -piece);
 			if (pieceTo > 0) {
-				System.out.println("az uj helyen volt már");
 				changeProductPieceInWarehouse(to, product, piece);
 			} else {
-				System.out.println("az uj helyen nem volt még");
 				addContain(to, product, piece);
 			}
 		}
+	}
+
+	public void AddProductToWarehouse(Product product, Warehouse warehouse,
+			int piece) {
+
+		try {
+			PreparedStatement pst = conn
+					.prepareStatement("insert into Product(ID, NAME, PRICE, "
+							+ "MANUFACTURER_ID) values (product_id.NEXTVAL, ?, ?, ?)");
+
+			pst.setString(1, product.getName());
+			pst.setInt(2, product.getPrice());
+			pst.setInt(3, product.getManufacturerID());
+
+			pst.executeUpdate();
+
+			PreparedStatement pst4 = conn
+					.prepareStatement("insert into CONTAIN(PRODUCT_ID, WAREHOUSE_ID, PIECE) "
+							+ "values((select ID FROM PRODUCT where NAME = ? and PRICE = ? and MANUFACTURER_ID = ?),"
+							+ " ?,?)");
+			pst4.setString(1, product.getName());
+			pst4.setInt(2, product.getPrice());
+			pst4.setInt(3, product.getManufacturerID());
+			pst4.setInt(4, warehouse.getId());
+			pst4.setInt(5, piece);
+			pst4.executeUpdate();
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+	}
+
+	public void addContain(Warehouse warehouse, Product product, int piece) {
+		try {
+			PreparedStatement pst = conn
+					.prepareStatement("insert into contain values(?, ?, ?)");
+			pst.setInt(1, product.getId());
+			pst.setInt(2, warehouse.getId());
+			pst.setInt(3, piece);
+
+			pst.executeUpdate();
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void addWarehouse(Warehouse warehouse) {
+
+		try {
+			PreparedStatement pst = conn
+					.prepareStatement("insert into WAREHOUSE values(warehouse_id.NEXTVAL, ?)");
+			pst.setString(1, warehouse.getName());
+			pst.executeUpdate();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+	}
+
+	public void addManufacturer(String manufacturer) {
+
+		try {
+			PreparedStatement pst = conn
+					.prepareStatement("insert into MANUFACTURER values(manufacturer_id.NEXTVAL, ?)");
+			pst.setString(1, manufacturer);
+			pst.executeQuery();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
 	}
 }
