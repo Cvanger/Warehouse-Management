@@ -50,8 +50,7 @@ public class WHMSwing extends JFrame {
 	private JLabel resourcesChooseWarehouseLbl = new JLabel("Choose Warehouse:");
 	private JLabel resourceSumPriceLbl = new JLabel("");
 	private JTable resourceTable = new JTable();
-	private JButton resourceReloadBtn = new JButton("Reload");
-	JScrollPane resourcesScrollPane = new JScrollPane();
+	private JScrollPane resourcesScrollPane = new JScrollPane();
 
 	private JPanel addPanel = new JPanel();
 	private JPanel addProductPanel = new JPanel();
@@ -65,7 +64,7 @@ public class WHMSwing extends JFrame {
 	private JLabel addPlblManufacturer = new JLabel("Manufacturer:");
 	private JLabel addPlblWarehouse = new JLabel("Warehouse:");
 	private JLabel addPlblPiece = new JLabel("Piece:");
-	private JLabel addPlblProduct = new JLabel("Add Product");
+	private JLabel addPlblProduct = new JLabel("Add");
 	private JTextPane addPtextName = new JTextPane();
 	private JTextPane addPtextPrice = new JTextPane();
 	private JTextPane addPtextPiece = new JTextPane();
@@ -89,8 +88,8 @@ public class WHMSwing extends JFrame {
 	private JComboBox moveToComboBox = new JComboBox();
 	private JTable moveTableFrom = new JTable();
 	private JTable moveTableTo = new JTable();
-	JScrollPane moveScrollPanelFrom = new JScrollPane();
-	JScrollPane moveScrollPanelTo = new JScrollPane();
+	private JScrollPane moveScrollPanelFrom = new JScrollPane();
+	private JScrollPane moveScrollPanelTo = new JScrollPane();
 
 	private JLabel searchLbl = new JLabel("Search a Product");
 	private JLabel searchNameLbl = new JLabel("Name:");
@@ -99,7 +98,7 @@ public class WHMSwing extends JFrame {
 	private JTextPane searchManufacturerText = new JTextPane();
 	private JButton searchBtn = new JButton("Search");
 	private JTable searchTable = new JTable();
-	JScrollPane moveScrollPane = new JScrollPane();
+	private JScrollPane moveScrollPane = new JScrollPane();
 
 	private JMenuBar menuBar = new JMenuBar();
 	private JMenuItem mntmAddProduct = new JMenuItem("Add Product");
@@ -134,7 +133,7 @@ public class WHMSwing extends JFrame {
 				jdbc.open();
 				showResourcesPanel();
 				reloadResourcesTable();
-				logger.info("window opened");
+				logger.info("The main window opened.");
 			}
 
 			@Override
@@ -151,23 +150,41 @@ public class WHMSwing extends JFrame {
 		JMenu mnFile = new JMenu("File");
 		menuBar.add(mnFile);
 		mnFile.add(mntmAddProduct);
+
+		mntmResources.setMnemonic(KeyEvent.VK_R);
+		mntmResources.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R,
+				ActionEvent.CTRL_MASK));
+		mntmResources.setToolTipText("List resources order by warehouse");
 		mntmResources.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
+				logger.info("Switch to resources panel.");
 				showResourcesPanel();
 				reloadResourcesTable();
 			}
 		});
 
 		JMenuItem mntmSearch = new JMenuItem("Search");
+
+		mntmSearch.setMnemonic(KeyEvent.VK_S);
+		mntmSearch.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S,
+				ActionEvent.ALT_MASK));
+		mntmSearch.setToolTipText("Search for a product in warehouses");
 		mntmSearch.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
+				logger.info("Switch to search panel.");
 				showSearchPanel();
 			}
 		});
 		mnFile.add(mntmSearch);
 		mnFile.add(mntmResources);
+
+		mntmMove.setMnemonic(KeyEvent.VK_M);
+		mntmMove.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_M,
+				ActionEvent.CTRL_MASK));
+		mntmMove.setToolTipText("Move product from one warehouse to another");
 		mntmMove.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
+				logger.info("Switch to move panel.");
 				showMovePanel();
 				reloadMove(true);
 			}
@@ -181,21 +198,31 @@ public class WHMSwing extends JFrame {
 		mntmClose.setToolTipText("Exit application");
 		mntmClose.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent event) {
+				logger.info("Closing the application.");
 				jdbc.close();
 				System.exit(0);
 			}
 		});
 
+		mntmAddProduct.setMnemonic(KeyEvent.VK_D);
+		mntmAddProduct.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_D,
+				ActionEvent.CTRL_MASK));
+		mntmAddProduct.setToolTipText("Add product, warehouse, manufacturer");
 		mntmAddProduct.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
+				logger.info("Switch to add panel.");
 				showAddPanel();
 			}
 		});
 		menuBar.add(mntmHelp);
+
+		mntmHelp.setMnemonic(KeyEvent.VK_H);
+		mntmHelp.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_H,
+				ActionEvent.CTRL_MASK));
+		mntmHelp.setToolTipText("Help");
 		mntmHelp.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				showAddPanel();
 			}
 		});
 
@@ -213,16 +240,15 @@ public class WHMSwing extends JFrame {
 		resourcesWarehousesComboBox.setBounds(183, 19, 300, 24);
 		resourcePanel.add(resourcesWarehousesComboBox);
 
-		resourceSumPriceLbl.setBounds(12, 62, 400, 25);
-		resourcePanel.add(resourceSumPriceLbl);
-		resourceReloadBtn.addActionListener(new ActionListener() {
+		resourcesWarehousesComboBox.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
+				logger.info("Reload the resources table.");
 				reloadResourcesTable();
 			}
 		});
 
-		resourceReloadBtn.setBounds(600, 12, 120, 25);
-		resourcePanel.add(resourceReloadBtn);
+		resourceSumPriceLbl.setBounds(12, 62, 400, 25);
+		resourcePanel.add(resourceSumPriceLbl);
 
 		addPanel.add(addProductPanel);
 		addPanel.add(addWarehousePanel);
@@ -272,6 +298,7 @@ public class WHMSwing extends JFrame {
 		addProductPanel.add(addPbtn);
 		addPbtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
+				logger.info("Add a new product.");
 				addProduct();
 			}
 		});
@@ -294,6 +321,7 @@ public class WHMSwing extends JFrame {
 		addWarehousePanel.add(addWbtn);
 		addWbtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
+				logger.info("Add a new warehouse.");
 				addWarehouse();
 			}
 		});
@@ -316,6 +344,7 @@ public class WHMSwing extends JFrame {
 		addManufacturerPanel.add(addMbtn);
 		addMbtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
+				logger.info("Add a new manufacturer.");
 				addManufacturer();
 			}
 		});
@@ -333,17 +362,13 @@ public class WHMSwing extends JFrame {
 
 		moveFromComboBox.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
+				logger.info("Reload the move panel.");
 				reloadMove(true);
 			}
 		});
 
 		moveFromComboBox.setBounds(20, 60, 200, 25);
 		movePanel.add(moveFromComboBox);
-		moveToComboBox.addItemListener(new ItemListener() {
-			public void itemStateChanged(ItemEvent arg0) {
-				reloadMove(false);
-			}
-		});
 
 		moveToComboBox.setBounds(520, 60, 200, 25);
 		movePanel.add(moveToComboBox);
@@ -368,17 +393,19 @@ public class WHMSwing extends JFrame {
 		searchPanel.add(searchManufacturerText);
 		searchBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				logger.info("Search for a product.");
 				searchProduct();
 			}
 		});
 
 		searchBtn.setBounds(150, 160, 200, 25);
 		searchPanel.add(searchBtn);
-
-		// System.out.println(JOptionPane.showInputDialog("asd"));
-
 	}
 
+	/**
+	 * Shows the add panel, where you can add products, warehouses or
+	 * manufacturers to the database.
+	 */
 	private void showAddPanel() {
 		resourcePanel.setVisible(false);
 		movePanel.setVisible(false);
@@ -398,14 +425,17 @@ public class WHMSwing extends JFrame {
 			comboBoxAddPWarehouses.addItem(w.getName());
 	}
 
+	/**
+	 * Adds a product to the database.
+	 */
 	private void addProduct() {
 
 		jdbc.AddProductToWarehouse(
-				new Product(
-						addPtextName.getText(),
-						jdbc.getManufacturerIdByName((String) comboBoxAddPManufacturers
-								.getSelectedItem()), Integer
-								.parseInt((addPtextPrice.getText()))), jdbc
+				new Product(addPtextName.getText(), jdbc
+						.getManufacturerIdByName(
+								(String) comboBoxAddPManufacturers
+										.getSelectedItem()).getId(), Integer
+						.parseInt((addPtextPrice.getText()))), jdbc
 						.getWarehouseByName((String) comboBoxAddPWarehouses
 								.getSelectedItem()), Integer
 						.parseInt(addPtextPiece.getText()));
@@ -416,22 +446,28 @@ public class WHMSwing extends JFrame {
 		addPtextPiece.setText("");
 	}
 
+	/**
+	 * Adds a manufacturer to the database.
+	 */
 	private void addManufacturer() {
 		jdbc.addManufacturer(addMtextName.getText());
-
-		logger.warn("A new manufacturer added.");
 		addMtextName.setText("");
 		showAddPanel();
 	}
 
+	/**
+	 * Adds a warehouse to the database.
+	 */
 	private void addWarehouse() {
-
 		jdbc.addWarehouse(new Warehouse((String) addWtextName.getText()));
-
 		addWtextName.setText("");
 		showAddPanel();
 	}
 
+	/**
+	 * Shows the search panel, where you can search for a product using it's
+	 * name.
+	 */
 	private void showSearchPanel() {
 		addPanel.setVisible(false);
 		resourcePanel.setVisible(false);
@@ -439,18 +475,18 @@ public class WHMSwing extends JFrame {
 		searchPanel.setVisible(true);
 	}
 
+	/**
+	 * Searches for a product specified by it's name.
+	 */
 	private void searchProduct() {
-
 		List<Contain> results = jdbc.getContainsFromProductSearch(jdbc
 				.getProductByName(searchNameText.getText()));
 
 		Object[][] rowData = new Object[results.size()][4];
 		Object[] columnNames = new String[] { "Warehouse Name", "Piece" };
 
-		System.out.println(results.size());
-
 		for (int i = 0; i < results.size(); ++i) {
-			rowData[i][0] = jdbc.getWarehouseNameById(
+			rowData[i][0] = jdbc.getWarehouseById(
 					results.get(i).getWarehouseId()).getName();
 			rowData[i][1] = results.get(i).getPiece();
 		}
@@ -468,9 +504,12 @@ public class WHMSwing extends JFrame {
 
 		revalidate();
 		repaint();
-
 	}
 
+	/**
+	 * Shows move panel, where you can move any piece of the products from a
+	 * specified warehouse to another.
+	 */
 	private void showMovePanel() {
 		resourcePanel.setVisible(false);
 		addPanel.setVisible(false);
@@ -486,6 +525,50 @@ public class WHMSwing extends JFrame {
 			moveFromComboBox.addItem(w.getName());
 	}
 
+	/**
+	 * Moves a product.
+	 * 
+	 * @param target
+	 *            target from the event called
+	 */
+	private void moveProduct(JTable target) {
+		String text = JOptionPane
+				.showInputDialog("How many products do you want to transfer?");
+		int db;
+
+		if (text != null) {
+			db = Integer.parseInt(text);
+
+			if (0 < db
+					&& db <= Integer.parseInt(moveTableFrom.getModel()
+							.getValueAt(target.getSelectedRow(), 3).toString())) {
+
+				jdbc.moveProduct(jdbc.getProductByName(moveTableFrom.getModel()
+						.getValueAt(target.getSelectedRow(), 0).toString()),
+						jdbc.getWarehouseByName(moveFromComboBox
+								.getSelectedItem().toString()), jdbc
+								.getWarehouseByName(moveToComboBox
+										.getSelectedItem().toString()), db);
+			}
+
+			if (db > Integer.parseInt(moveTableFrom.getModel()
+					.getValueAt(target.getSelectedRow(), 3).toString()))
+				JOptionPane.showMessageDialog(null, "Too high value!");
+
+			if (db < 1)
+				JOptionPane.showMessageDialog(null, "Too low value!");
+
+			reloadMove(false);
+		}
+	}
+
+	/**
+	 * Reloads the move panel.
+	 * 
+	 * @param both
+	 *            if {@code true} it will reload both of the comboboxes,
+	 *            otherwise just the first one
+	 */
 	private void reloadMove(boolean both) {
 
 		if (both) {
@@ -507,7 +590,7 @@ public class WHMSwing extends JFrame {
 
 		for (int i = 0; i < products.size(); ++i) {
 			rowData[i][0] = products.get(i).getName();
-			rowData[i][1] = jdbc.getManufacturerNameById(
+			rowData[i][1] = jdbc.getManufacturerById(
 					products.get(i).getManufacturerID()).getName();
 			rowData[i][2] = products.get(i).getPrice();
 			rowData[i][3] = jdbc.getPieceFromWarehouseWithProduct(jdbc
@@ -524,35 +607,7 @@ public class WHMSwing extends JFrame {
 		moveTableFrom.addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {
 				if (e.getClickCount() == 2) {
-					JTable target = (JTable) e.getSource();
-					System.out.println(moveTableFrom.getModel()
-							.getValueAt(target.getSelectedRow(), 0).toString());
-					int db = Integer.parseInt(JOptionPane
-							.showInputDialog("How many products do you want to transfer?"));
-
-					if (0 < db
-							&& db <= Integer.parseInt(moveTableFrom.getModel()
-									.getValueAt(target.getSelectedRow(), 3)
-									.toString())) {
-
-						jdbc.moveProduct(jdbc.getProductByName(moveTableFrom
-								.getModel()
-								.getValueAt(target.getSelectedRow(), 0)
-								.toString()), jdbc
-								.getWarehouseByName(moveFromComboBox
-										.getSelectedItem().toString()), jdbc
-								.getWarehouseByName(moveToComboBox
-										.getSelectedItem().toString()), db);
-					}
-
-					if (db > Integer.parseInt(moveTableFrom.getModel()
-							.getValueAt(target.getSelectedRow(), 3).toString()))
-						JOptionPane.showMessageDialog(null, "Too high value!");
-
-					if (db < 1)
-						JOptionPane.showMessageDialog(null, "Too low value!");
-
-					reloadMove(false);
+					moveProduct((JTable) e.getSource());
 				}
 			}
 		});
@@ -561,7 +616,7 @@ public class WHMSwing extends JFrame {
 			@Override
 			public void keyPressed(KeyEvent e) {
 				if (e.getKeyChar() == 'm')
-					System.out.println(moveTableFrom.getSelectedRow());
+					moveProduct((JTable) e.getSource());
 			}
 		});
 
@@ -577,7 +632,7 @@ public class WHMSwing extends JFrame {
 
 		for (int i = 0; i < products.size(); ++i) {
 			rowData[i][0] = products.get(i).getName();
-			rowData[i][1] = jdbc.getManufacturerNameById(
+			rowData[i][1] = jdbc.getManufacturerById(
 					products.get(i).getManufacturerID()).getName();
 			rowData[i][2] = products.get(i).getPrice();
 			rowData[i][3] = jdbc.getPieceFromWarehouseWithProduct(jdbc
@@ -585,7 +640,11 @@ public class WHMSwing extends JFrame {
 							.getSelectedItem()), products.get(i));
 		}
 
-		moveTableTo = new JTable(rowData, columnNames);
+		moveTableTo = new JTable(rowData, columnNames) {
+			public boolean isCellEditable(int row, int column) {
+				return false;
+			};
+		};
 
 		movePanel.remove(moveScrollPanelTo);
 		moveScrollPanelTo = new JScrollPane(moveTableTo);
@@ -594,9 +653,11 @@ public class WHMSwing extends JFrame {
 
 		revalidate();
 		repaint();
-
 	}
 
+	/**
+	 * Shows the resources panel.
+	 */
 	private void showResourcesPanel() {
 		addPanel.setVisible(false);
 		movePanel.setVisible(false);
@@ -610,6 +671,9 @@ public class WHMSwing extends JFrame {
 			resourcesWarehousesComboBox.addItem(w.getName());
 	}
 
+	/**
+	 * Reloads the resources table.
+	 */
 	private void reloadResourcesTable() {
 
 		if (resourcesWarehousesComboBox.getItemCount() != 0)
@@ -629,11 +693,9 @@ public class WHMSwing extends JFrame {
 		Object[] columnNames = new String[] { "Name", "Manufacturer", "Price",
 				"Piece" };
 
-		System.out.println(products.size());
-
 		for (int i = 0; i < products.size(); ++i) {
 			rowData[i][0] = products.get(i).getName();
-			rowData[i][1] = jdbc.getManufacturerNameById(
+			rowData[i][1] = jdbc.getManufacturerById(
 					products.get(i).getManufacturerID()).getName();
 			rowData[i][2] = products.get(i).getPrice();
 			rowData[i][3] = jdbc.getPieceFromWarehouseWithProduct(jdbc
