@@ -134,6 +134,7 @@ public class WHMSwing extends JFrame {
 			@Override
 			public void windowOpened(WindowEvent e) {
 				jdbc.open();
+
 				showResourcesPanel();
 				reloadResourcesTable();
 				logger.info("The main window opened.");

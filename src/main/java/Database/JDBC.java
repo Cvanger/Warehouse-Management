@@ -443,8 +443,8 @@ public class JDBC {
 
 			PreparedStatement pst2 = conn
 					.prepareStatement("insert into CONTAIN(PRODUCT_ID, WAREHOUSE_ID, PIECE) "
-							+ "values((select ID FROM PRODUCT where NAME = ? and PRICE = ? and MANUFACTURER_ID = ?),"
-							+ " ?,?)");
+							+ "values((select ID FROM PRODUCT where NAME = ? and PRICE = ? "
+							+ "and MANUFACTURER_ID = ?), ?,?)");
 			pst2.setString(1, product.getName());
 			pst2.setInt(2, product.getPrice());
 			pst2.setInt(3, product.getManufacturerID());
@@ -499,44 +499,48 @@ public class JDBC {
 		}
 	}
 
-	public void delete(Product product) {
+	public void deleteProduct(String name) {
 		try {
-			PreparedStatement pst = conn.prepareStatement("delete from PRODUCT where ID = ?");
-			pst.setInt(1, product.getId());
+			PreparedStatement pst = conn
+					.prepareStatement("delete from PRODUCT where name = ?");
+			pst.setString(1, name);
 			pst.executeUpdate();
 			pst.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
 	}
-	
-	public void delete(Warehouse warehouse) {
+
+	public void deleteWarehouse(String name) {
 		try {
-			PreparedStatement pst = conn.prepareStatement("delete from WAREHOUSE where ID = ?");
-			pst.setInt(1, warehouse.getId());
+			PreparedStatement pst = conn
+					.prepareStatement("delete from WAREHOUSE where name = ?");
+			pst.setString(1, name);
 			pst.executeUpdate();
 			pst.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
 	}
-	
-	public void delete(Manufacturer manufacturer) {
+
+	public void deleteManufacturer(String name) {
 		try {
-			PreparedStatement pst = conn.prepareStatement("delete from MANUFACTURER where ID = ?");
-			pst.setInt(1, manufacturer.getId());
+			PreparedStatement pst = conn
+					.prepareStatement("delete from MANUFACTURER where name = ?");
+			pst.setString(1, name);
 			pst.executeUpdate();
 			pst.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
 	}
-	
-	public void delete(Product product, Warehouse warehouse) {
+
+	public void deleteContain(String pname, String wname) {
 		try {
-			PreparedStatement pst = conn.prepareStatement("delete from MANUFACTURER where PRODUCT_ID = ? and WAREHOUSE_ID = ?");
-			pst.setInt(1, product.getId());
-			pst.setInt(2, warehouse.getId());
+			PreparedStatement pst = conn
+					.prepareStatement("delete from MANUFACTURER where PRODUCT_ID = (select id from product where name = ?) and WAREHOUSE_ID = (select id from warehouse where name = ?)");
+			pst.setString(1, pname);
+			pst.setString(2, wname);
 			pst.executeUpdate();
 			pst.close();
 		} catch (SQLException e) {
