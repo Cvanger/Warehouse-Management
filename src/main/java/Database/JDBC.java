@@ -67,6 +67,9 @@ public class JDBC {
 			ResultSet rs = pst.executeQuery();
 			rs.next();
 			sum = rs.getInt("sum");
+
+			rs.close();
+			pst.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -88,11 +91,63 @@ public class JDBC {
 				contains.add(new Contain(rs.getInt("PRODUCT_ID"), rs
 						.getInt("WAREHOUSE_ID"), rs.getInt("PIECE")));
 			}
+
+			rs.close();
+			pst.close();
 		} catch (SQLException e) {
 			logger.error("there was a problem in the getContainsFromProductSearch function");
 			e.printStackTrace();
 		}
 
+		return contains;
+	}
+
+	public List<Contain> getContainsFromManufacturerSearch(
+			Manufacturer manufacturer) {
+		List<Contain> contains = new ArrayList<Contain>();
+		try {
+			PreparedStatement pst = conn
+					.prepareStatement("SELECT c.PRODUCT_ID as p_id, c.WAREHOUSE_ID as w_id, c.PIECE as piece FROM CONTAIN c inner join PRODUCT p on c.PRODUCT_ID = p.ID WHERE p.manufacturer_id = ?");
+			pst.setInt(1, manufacturer.getId());
+
+			ResultSet rs = pst.executeQuery();
+
+			while (rs.next()) {
+				contains.add(new Contain(rs.getInt("p_id"), rs.getInt("w_id"),
+						rs.getInt("piece")));
+			}
+
+			rs.close();
+			pst.close();
+		} catch (SQLException e) {
+			logger.error("there was a problem in the getContainsFromManufacturerSearch function");
+			e.printStackTrace();
+		}
+		return contains;
+	}
+
+	public List<Contain> getContainsFromSearch(Manufacturer manufacturer,
+			Product product) {
+		List<Contain> contains = new ArrayList<Contain>();
+		try {
+			PreparedStatement pst = conn
+					.prepareStatement("SELECT c.PRODUCT_ID as p_id, c.WAREHOUSE_ID as w_id, c.PIECE as piece FROM CONTAIN c inner join PRODUCT p on c.PRODUCT_ID = p.ID inner join MANUFACTURER m on p.MANUFACTURER_ID = m.ID WHERE p.ID = ? and m.NAME = ?");
+			pst.setInt(1, product.getId());
+			pst.setString(2, manufacturer.getName());
+
+			ResultSet rs = pst.executeQuery();
+
+			while (rs.next()) {
+				contains.add(new Contain(rs.getInt("p_id"), rs.getInt("w_id"),
+						rs.getInt("piece")));
+			}
+
+			rs.close();
+			pst.close();
+		} catch (SQLException e) {
+			logger.error("there was a problem in the getContainsFromManufacturerSearch function");
+			e.printStackTrace();
+		}
 		return contains;
 	}
 
@@ -112,6 +167,8 @@ public class JDBC {
 						rs.getString("name"), rs.getInt("man_id"), rs
 								.getInt("price")));
 
+			rs.close();
+			pst.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -131,6 +188,9 @@ public class JDBC {
 				while (rs.next())
 					warehouses.add(new Warehouse(rs.getInt("id"), rs
 							.getString("name")));
+
+			rs.close();
+			statement.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -149,6 +209,9 @@ public class JDBC {
 			while (rs.next())
 				manufacturers.add(new Manufacturer(rs.getInt("id"), rs
 						.getString("name")));
+
+			statement.close();
+			rs.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -168,6 +231,9 @@ public class JDBC {
 			rs.next();
 			manufacturer = new Manufacturer(rs.getInt("id"),
 					rs.getString("name"));
+
+			rs.close();
+			pst.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -185,15 +251,16 @@ public class JDBC {
 
 			ResultSet rs = pst.executeQuery();
 			rs.next();
-
 			warehouse = new Warehouse(rs.getString("name"));
+			rs.close();
+			pst.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
 
 		return warehouse;
 	}
-	
+
 	public Warehouse getWarehouseByName(String name) {
 
 		Warehouse warehouse = new Warehouse();
@@ -206,14 +273,16 @@ public class JDBC {
 			rs.next();
 			warehouse = new Warehouse(rs.getInt("ID"), rs.getString("NAME"));
 
+			rs.close();
+			pst.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
 
 		return warehouse;
 	}
-	
-	public Manufacturer getManufacturerIdByName(String name) {
+
+	public Manufacturer getManufacturerByName(String name) {
 		Manufacturer manufacturer = new Manufacturer();
 		try {
 			PreparedStatement pst = conn
@@ -221,9 +290,12 @@ public class JDBC {
 			pst.setString(1, name);
 
 			ResultSet rs = pst.executeQuery();
-			rs.next();
-			manufacturer = new Manufacturer(rs.getInt("id"),
-					rs.getString("name"));
+			while (rs.next())
+				manufacturer = new Manufacturer(rs.getInt("id"),
+						rs.getString("name"));
+
+			rs.close();
+			pst.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -232,7 +304,6 @@ public class JDBC {
 	}
 
 	public Product getProductByName(String productName) {
-
 		Product product = new Product();
 		try {
 			PreparedStatement pst = conn
@@ -240,13 +311,35 @@ public class JDBC {
 			pst.setString(1, productName);
 
 			ResultSet rs = pst.executeQuery();
-			rs.next();
-			product = new Product(rs.getInt("id"), rs.getString("name"),
-					rs.getInt("manufacturer_id"), rs.getInt("price"));
+			while (rs.next())
+				product = new Product(rs.getInt("id"), rs.getString("name"),
+						rs.getInt("manufacturer_id"), rs.getInt("price"));
+
+			rs.close();
+			pst.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
+		return product;
+	}
 
+	public Product getProductById(int id) {
+		Product product = new Product();
+		try {
+			PreparedStatement pst = conn
+					.prepareStatement("select id, name, manufacturer_id, price from PRODUCT where ID = ?");
+			pst.setInt(1, id);
+
+			ResultSet rs = pst.executeQuery();
+			while (rs.next())
+				product = new Product(rs.getInt("id"), rs.getString("name"),
+						rs.getInt("manufacturer_id"), rs.getInt("price"));
+
+			rs.close();
+			pst.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 		return product;
 	}
 
@@ -268,6 +361,9 @@ public class JDBC {
 				piece = rs.getInt("piece");
 			else
 				piece = 0;
+
+			rs.close();
+			pst.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -282,6 +378,7 @@ public class JDBC {
 			pst.setInt(1, warehouse.getId());
 			pst.setInt(2, product.getId());
 			pst.executeUpdate();
+			pst.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -300,7 +397,7 @@ public class JDBC {
 			pst.setInt(4, warehouse.getId());
 			pst.setInt(5, product.getId());
 			pst.executeUpdate();
-
+			pst.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -344,21 +441,22 @@ public class JDBC {
 
 			pst.executeUpdate();
 
-			PreparedStatement pst4 = conn
+			PreparedStatement pst2 = conn
 					.prepareStatement("insert into CONTAIN(PRODUCT_ID, WAREHOUSE_ID, PIECE) "
 							+ "values((select ID FROM PRODUCT where NAME = ? and PRICE = ? and MANUFACTURER_ID = ?),"
 							+ " ?,?)");
-			pst4.setString(1, product.getName());
-			pst4.setInt(2, product.getPrice());
-			pst4.setInt(3, product.getManufacturerID());
-			pst4.setInt(4, warehouse.getId());
-			pst4.setInt(5, piece);
-			pst4.executeUpdate();
+			pst2.setString(1, product.getName());
+			pst2.setInt(2, product.getPrice());
+			pst2.setInt(3, product.getManufacturerID());
+			pst2.setInt(4, warehouse.getId());
+			pst2.setInt(5, piece);
+			pst2.executeUpdate();
 
+			pst.close();
+			pst2.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-
 	}
 
 	public void addContain(Warehouse warehouse, Product product, int piece) {
@@ -370,35 +468,79 @@ public class JDBC {
 			pst.setInt(3, piece);
 
 			pst.executeUpdate();
-
+			pst.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
 	}
 
 	public void addWarehouse(Warehouse warehouse) {
-
 		try {
 			PreparedStatement pst = conn
 					.prepareStatement("insert into WAREHOUSE values(warehouse_id.NEXTVAL, ?)");
 			pst.setString(1, warehouse.getName());
 			pst.executeUpdate();
+			pst.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
 
 	}
 
-	public void addManufacturer(String manufacturer) {
-
+	public void addManufacturer(Manufacturer manufacturer) {
 		try {
 			PreparedStatement pst = conn
 					.prepareStatement("insert into MANUFACTURER values(manufacturer_id.NEXTVAL, ?)");
-			pst.setString(1, manufacturer);
+			pst.setString(1, manufacturer.getName());
 			pst.executeQuery();
+			pst.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
+	}
 
+	public void delete(Product product) {
+		try {
+			PreparedStatement pst = conn.prepareStatement("delete from PRODUCT where ID = ?");
+			pst.setInt(1, product.getId());
+			pst.executeUpdate();
+			pst.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public void delete(Warehouse warehouse) {
+		try {
+			PreparedStatement pst = conn.prepareStatement("delete from WAREHOUSE where ID = ?");
+			pst.setInt(1, warehouse.getId());
+			pst.executeUpdate();
+			pst.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public void delete(Manufacturer manufacturer) {
+		try {
+			PreparedStatement pst = conn.prepareStatement("delete from MANUFACTURER where ID = ?");
+			pst.setInt(1, manufacturer.getId());
+			pst.executeUpdate();
+			pst.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public void delete(Product product, Warehouse warehouse) {
+		try {
+			PreparedStatement pst = conn.prepareStatement("delete from MANUFACTURER where PRODUCT_ID = ? and WAREHOUSE_ID = ?");
+			pst.setInt(1, product.getId());
+			pst.setInt(2, warehouse.getId());
+			pst.executeUpdate();
+			pst.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 	}
 }

@@ -13,6 +13,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.JButton;
@@ -99,9 +100,11 @@ public class WHMSwing extends JFrame {
 	private JButton searchBtn = new JButton("Search");
 	private JTable searchTable = new JTable();
 	private JScrollPane moveScrollPane = new JScrollPane();
+	private boolean rightFrom = true;
+	private boolean rightTo = true;
 
 	private JMenuBar menuBar = new JMenuBar();
-	private JMenuItem mntmAddProduct = new JMenuItem("Add Product");
+	private JMenuItem mntmAddProduct = new JMenuItem("Add");
 	private JMenuItem mntmClose = new JMenuItem("Close");
 	private JMenuItem mntmMove = new JMenuItem("Move");
 	private JMenuItem mntmResources = new JMenuItem("Resources");
@@ -186,7 +189,6 @@ public class WHMSwing extends JFrame {
 			public void actionPerformed(ActionEvent arg0) {
 				logger.info("Switch to move panel.");
 				showMovePanel();
-				reloadMove(true);
 			}
 		});
 		mnFile.add(mntmMove);
@@ -362,13 +364,20 @@ public class WHMSwing extends JFrame {
 
 		moveFromComboBox.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				logger.info("Reload the move panel.");
-				reloadMove(true);
+				if (rightFrom)
+					reloadMoveFromTable();
 			}
 		});
 
 		moveFromComboBox.setBounds(20, 60, 200, 25);
 		movePanel.add(moveFromComboBox);
+
+		moveToComboBox.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				if (rightTo)
+					reloadMoveToTable();
+			}
+		});
 
 		moveToComboBox.setBounds(520, 60, 200, 25);
 		movePanel.add(moveToComboBox);
@@ -398,7 +407,7 @@ public class WHMSwing extends JFrame {
 			}
 		});
 
-		searchBtn.setBounds(150, 160, 200, 25);
+		searchBtn.setBounds(400, 50, 200, 25);
 		searchPanel.add(searchBtn);
 	}
 
@@ -431,14 +440,12 @@ public class WHMSwing extends JFrame {
 	private void addProduct() {
 
 		jdbc.AddProductToWarehouse(
-				new Product(addPtextName.getText(), jdbc
-						.getManufacturerIdByName(
-								(String) comboBoxAddPManufacturers
-										.getSelectedItem()).getId(), Integer
-						.parseInt((addPtextPrice.getText()))), jdbc
-						.getWarehouseByName((String) comboBoxAddPWarehouses
-								.getSelectedItem()), Integer
-						.parseInt(addPtextPiece.getText()));
+				new Product(addPtextName.getText(), jdbc.getManufacturerByName(
+						(String) comboBoxAddPManufacturers.getSelectedItem())
+						.getId(), Integer.parseInt((addPtextPrice.getText()))),
+				jdbc.getWarehouseByName((String) comboBoxAddPWarehouses
+						.getSelectedItem()), Integer.parseInt(addPtextPiece
+						.getText()));
 
 		showAddPanel();
 		addPtextName.setText("");
@@ -450,7 +457,7 @@ public class WHMSwing extends JFrame {
 	 * Adds a manufacturer to the database.
 	 */
 	private void addManufacturer() {
-		jdbc.addManufacturer(addMtextName.getText());
+		jdbc.addManufacturer(new Manufacturer(2, addMtextName.getText()));
 		addMtextName.setText("");
 		showAddPanel();
 	}
@@ -479,16 +486,34 @@ public class WHMSwing extends JFrame {
 	 * Searches for a product specified by it's name.
 	 */
 	private void searchProduct() {
-		List<Contain> results = jdbc.getContainsFromProductSearch(jdbc
-				.getProductByName(searchNameText.getText()));
+		List<Contain> results = new ArrayList<Contain>();
+		if (!searchNameText.getText().equalsIgnoreCase("")) {
+			if (!searchManufacturerText.getText().equalsIgnoreCase(""))
+				results = jdbc.getContainsFromSearch(
+						jdbc.getManufacturerByName(searchManufacturerText
+								.getText()), jdbc
+								.getProductByName(searchNameText.getText()));
+			else
+				results = jdbc.getContainsFromProductSearch(jdbc
+						.getProductByName(searchNameText.getText()));
 
-		Object[][] rowData = new Object[results.size()][4];
-		Object[] columnNames = new String[] { "Warehouse Name", "Piece" };
+		} else if (!searchManufacturerText.getText().equalsIgnoreCase(""))
+			results = jdbc.getContainsFromManufacturerSearch(jdbc
+					.getManufacturerByName(searchManufacturerText.getText()));
+
+		Object[][] rowData = new Object[results.size()][5];
+		Object[] columnNames = new String[] { "Warehouse Name", "Name",
+				"Manufacturer", "Price", "Piece" };
 
 		for (int i = 0; i < results.size(); ++i) {
+			Product p = jdbc.getProductById(results.get(i).getProductId());
 			rowData[i][0] = jdbc.getWarehouseById(
 					results.get(i).getWarehouseId()).getName();
-			rowData[i][1] = results.get(i).getPiece();
+			rowData[i][1] = p.getName();
+			rowData[i][2] = jdbc.getManufacturerById(p.getManufacturerID())
+					.getName();
+			rowData[i][3] = p.getPrice();
+			rowData[i][4] = results.get(i).getPiece();
 		}
 
 		searchTable = new JTable(rowData, columnNames) {
@@ -499,7 +524,7 @@ public class WHMSwing extends JFrame {
 
 		searchPanel.remove(moveScrollPane);
 		moveScrollPane = new JScrollPane(searchTable);
-		moveScrollPane.setBounds(400, 62, 360, results.size() * 18 + 18);
+		moveScrollPane.setBounds(10, 150, 760, results.size() * 17 + 18);
 		searchPanel.add(moveScrollPane);
 
 		revalidate();
@@ -521,8 +546,12 @@ public class WHMSwing extends JFrame {
 
 		List<Warehouse> warehouses = jdbc.getWarehouses();
 
+		rightFrom = false;
 		for (Warehouse w : warehouses)
 			moveFromComboBox.addItem(w.getName());
+		rightFrom = true;
+
+		reloadMoveFromTable();
 	}
 
 	/**
@@ -549,37 +578,22 @@ public class WHMSwing extends JFrame {
 								.getSelectedItem().toString()), jdbc
 								.getWarehouseByName(moveToComboBox
 										.getSelectedItem().toString()), db);
+
+				reloadMoveFromTable();
 			}
 
-			if (db > Integer.parseInt(moveTableFrom.getModel()
+			else if (db > Integer.parseInt(moveTableFrom.getModel()
 					.getValueAt(target.getSelectedRow(), 3).toString()))
 				JOptionPane.showMessageDialog(null, "Too high value!");
 
-			if (db < 1)
+			else if (db < 1)
 				JOptionPane.showMessageDialog(null, "Too low value!");
-
-			reloadMove(false);
 		}
 	}
 
-	/**
-	 * Reloads the move panel.
-	 * 
-	 * @param both
-	 *            if {@code true} it will reload both of the comboboxes,
-	 *            otherwise just the first one
-	 */
-	private void reloadMove(boolean both) {
+	private void reloadMoveFromTable() {
 
-		if (both) {
-			moveToComboBox.removeAllItems();
-			List<Warehouse> warehouses = jdbc.getWarehouses();
-			for (Warehouse w : warehouses)
-				if (!w.equals(new Warehouse((String) moveFromComboBox
-						.getSelectedItem())))
-					moveToComboBox.addItem(w.getName());
-		}
-
+		logger.info("reload the movefrom table");
 		List<Product> products = jdbc
 				.getProductsFromWarehouse((String) moveFromComboBox
 						.getSelectedItem());
@@ -625,8 +639,28 @@ public class WHMSwing extends JFrame {
 		moveScrollPanelFrom.setBounds(12, 92, 350, 430);
 		movePanel.add(moveScrollPanelFrom);
 
-		products = jdbc.getProductsFromWarehouse((String) moveToComboBox
-				.getSelectedItem());
+		rightTo = false;
+		moveToComboBox.removeAllItems();
+		List<Warehouse> warehouses = jdbc.getWarehouses();
+		for (Warehouse w : warehouses)
+			if (!w.equals(new Warehouse((String) moveFromComboBox
+					.getSelectedItem())))
+				moveToComboBox.addItem(w.getName());
+
+		rightTo = true;
+		reloadMoveToTable();
+	}
+
+	private void reloadMoveToTable() {
+
+		logger.info("reload the moveto table");
+		List<Product> products = jdbc
+				.getProductsFromWarehouse((String) moveToComboBox
+						.getSelectedItem());
+
+		Object[][] rowData = new Object[products.size()][4];
+		Object[] columnNames = new String[] { "Name", "Manufacturer", "Price",
+				"Piece" };
 
 		rowData = new Object[products.size()][4];
 
@@ -650,9 +684,6 @@ public class WHMSwing extends JFrame {
 		moveScrollPanelTo = new JScrollPane(moveTableTo);
 		moveScrollPanelTo.setBounds(412, 92, 350, 430);
 		movePanel.add(moveScrollPanelTo);
-
-		revalidate();
-		repaint();
 	}
 
 	/**
