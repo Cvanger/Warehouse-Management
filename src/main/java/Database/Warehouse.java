@@ -80,6 +80,8 @@ public class Warehouse {
 	
 	/**
 	 * Returns a hash code from this {@link Warehouse}. 
+	 * 
+	 * @return result the hash code of the object
 	 */
 	@Override
 	public int hashCode() {
@@ -93,6 +95,7 @@ public class Warehouse {
 	 * Returns {@code true} if this {@link Warehouse} is equals with the {@code Object} received, otherwise returns {@code false}.
 	 * 
 	 * @param obj {@link Object} to check
+	 * @return true if this object is equals with the got one
 	 */
 	@Override
 	public boolean equals(Object obj) {
