@@ -42,6 +42,7 @@ import Database.JDBC;
 import Database.Manufacturer;
 import Database.Product;
 import Database.Warehouse;
+import Service.Service;
 
 public class WHMSwing extends JFrame {
 
@@ -104,8 +105,10 @@ public class WHMSwing extends JFrame {
 	private JTextPane searchManufacturerText = new JTextPane();
 	private JButton searchBtn = new JButton("Search");
 	private JTable searchTable = new JTable();
-	private JScrollPane moveScrollPane = new JScrollPane();
-	private JCheckBox moveCheckBox = new JCheckBox("Order by distance", true);
+	private JScrollPane searchScrollPane = new JScrollPane();
+	private JCheckBox searchCheckBox = new JCheckBox("Order by distance", true);
+	private JComboBox searchWhereAreYou = new JComboBox();
+	private JLabel searchWhereAreYouLbl = new JLabel("Where are you?");
 	private boolean rightFrom = true;
 	private boolean rightTo = true;
 
@@ -322,16 +325,16 @@ public class WHMSwing extends JFrame {
 
 		addWlblName.setBounds(30, 60, 50, 20);
 		addWarehousePanel.add(addWlblName);
-		
+
 		addWLongName.setBounds(30, 90, 100, 25);
 		addWarehousePanel.add(addWLongName);
-		
+
 		addWLatName.setBounds(30, 120, 100, 25);
 		addWarehousePanel.add(addWLatName);
-		
+
 		addWLong.setBounds(120, 90, 200, 20);
 		addWarehousePanel.add(addWLong);
-				
+
 		addWLat.setBounds(120, 120, 200, 20);
 		addWarehousePanel.add(addWLat);
 
@@ -380,10 +383,6 @@ public class WHMSwing extends JFrame {
 		moveLblTo.setBounds(520, 20, 200, 25);
 		moveLblTo.setFont(new Font("Dialog", Font.BOLD, 20));
 		movePanel.add(moveLblTo);
-		
-		moveCheckBox.setBounds(300, 500, 30, 20);
-		movePanel.add(moveCheckBox);
-		moveCheckBox.setEnabled(true);
 
 		moveFromComboBox.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
@@ -423,6 +422,16 @@ public class WHMSwing extends JFrame {
 		searchPanel.add(searchManufacturerLbl);
 		searchManufacturerText.setBounds(150, 100, 200, 25);
 		searchPanel.add(searchManufacturerText);
+		
+		searchWhereAreYou.setBounds(150, 130, 120, 25);
+		searchPanel.add(searchWhereAreYou);
+		searchWhereAreYouLbl.setBounds(20, 130, 200, 25);
+		searchPanel.add(searchWhereAreYouLbl);
+
+		searchCheckBox.setBounds(400, 100, 250, 20);
+		searchPanel.add(searchCheckBox);
+		searchCheckBox.setEnabled(true);
+
 		searchBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				logger.info("Search for a product.");
@@ -489,7 +498,9 @@ public class WHMSwing extends JFrame {
 	 * Adds a warehouse to the database.
 	 */
 	private void addWarehouse() {
-		jdbc.addWarehouse(new Warehouse((String) addWtextName.getText()));
+		jdbc.addWarehouse(new Warehouse((String) addWtextName.getText(), Double
+				.parseDouble(addWLong.getText()), Double.parseDouble(addWLat
+				.getText())));
 		addWtextName.setText("");
 		showAddPanel();
 	}
@@ -503,6 +514,10 @@ public class WHMSwing extends JFrame {
 		resourcePanel.setVisible(false);
 		movePanel.setVisible(false);
 		searchPanel.setVisible(true);
+		
+		List<Warehouse> warehouse = jdbc.getWarehouses();
+		for( Warehouse w : warehouse)
+			searchWhereAreYou.addItem(w.getName());
 	}
 
 	/**
@@ -524,19 +539,24 @@ public class WHMSwing extends JFrame {
 			results = jdbc.getContainsFromManufacturerSearch(jdbc
 					.getManufacturerByName(searchManufacturerText.getText()));
 
-		Object[][] rowData = new Object[results.size()][5];
+		Object[][] rowData = new Object[results.size()][6];
 		Object[] columnNames = new String[] { "Warehouse Name", "Name",
-				"Manufacturer", "Price", "Piece" };
+				"Manufacturer", "Price", "Piece", "Distance" };
 
 		for (int i = 0; i < results.size(); ++i) {
 			Product p = jdbc.getProductById(results.get(i).getProductId());
-			rowData[i][0] = jdbc.getWarehouseById(
-					results.get(i).getWarehouseId()).getName();
+			Warehouse warehouse = jdbc.getWarehouseById(results.get(i)
+					.getWarehouseId());
+			rowData[i][0] = warehouse.getName();
+			// System.out.println(warehouse.getLongitude());
 			rowData[i][1] = p.getName();
 			rowData[i][2] = jdbc.getManufacturerById(p.getManufacturerID())
 					.getName();
 			rowData[i][3] = p.getPrice();
 			rowData[i][4] = results.get(i).getPiece();
+			rowData[i][5] = Service.Distance(jdbc.getWarehouseByName((String)searchWhereAreYou.getSelectedItem()),
+					warehouse);
+
 		}
 
 		searchTable = new JTable(rowData, columnNames) {
@@ -545,10 +565,10 @@ public class WHMSwing extends JFrame {
 			};
 		};
 
-		searchPanel.remove(moveScrollPane);
-		moveScrollPane = new JScrollPane(searchTable);
-		moveScrollPane.setBounds(10, 150, 760, results.size() * 17 + 18);
-		searchPanel.add(moveScrollPane);
+		searchPanel.remove(searchScrollPane);
+		searchScrollPane = new JScrollPane(searchTable);
+		searchScrollPane.setBounds(10, 150, 760, results.size() * 17 + 18);
+		searchPanel.add(searchScrollPane);
 
 		revalidate();
 		repaint();

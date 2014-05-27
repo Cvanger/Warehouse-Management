@@ -101,6 +101,23 @@ public class Warehouse {
 		this.name = name;
 	}
 	
+	
+	
+	public Warehouse(int id, String name, double longitude, double latitude) {
+		this.id = id;
+		this.name = name;
+		this.longitude = longitude;
+		this.latitude = latitude;
+	}
+	
+	
+
+	public Warehouse(String name, double longitude, double latitude) {
+		this.name = name;
+		this.longitude = longitude;
+		this.latitude = latitude;
+	}
+
 	/**
 	 * Returns a hash code from this {@link Warehouse}. 
 	 * 

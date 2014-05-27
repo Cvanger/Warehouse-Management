@@ -53,22 +53,25 @@ public class JDBC {
 			}
 		}
 	}
-	public void addlognlat(){
+
+	public void addlognlat() {
 		try {
 			PreparedStatement pst = conn
 					.prepareStatement("ALTER TABLE WAREHOUSE MODIFY LONGITUDE double");
 			pst.executeQuery();
 			pst.close();
-			
-			/*pst = conn
-					.prepareStatement("ALTER TABLE WAREHOUSE ADD LATITUDE double");
-			pst.executeQuery();*/
+
+			/*
+			 * pst = conn
+			 * .prepareStatement("ALTER TABLE WAREHOUSE ADD LATITUDE double");
+			 * pst.executeQuery();
+			 */
 
 			pst.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-		
+
 	}
 
 	public Integer getSumPriceFromWarehouse(Warehouse warehouse) {
@@ -199,12 +202,17 @@ public class JDBC {
 		try {
 			Statement statement = conn.createStatement();
 			ResultSet rs = statement
-					.executeQuery("select id, name from WAREHOUSE");
+					.executeQuery("select id, name, longitude, latitude from WAREHOUSE");
+			
 
 			if (rs != null)
-				while (rs.next())
+				while (rs.next()){
 					warehouses.add(new Warehouse(rs.getInt("id"), rs
-							.getString("name")));
+							.getString("name"), rs.getDouble("longitude"), rs
+							.getDouble("latitude")));
+				
+					System.out.println(rs.getDouble("longitude"));
+				}
 
 			rs.close();
 			statement.close();
@@ -263,12 +271,13 @@ public class JDBC {
 		Warehouse warehouse = new Warehouse();
 		try {
 			PreparedStatement pst = conn
-					.prepareStatement("select name from WAREHOUSE where ID = ?");
+					.prepareStatement("select id, name, longitude, latitude from WAREHOUSE where ID = ?");
 			pst.setInt(1, war_id);
 
 			ResultSet rs = pst.executeQuery();
 			rs.next();
-			warehouse = new Warehouse(rs.getString("name"));
+			warehouse = new Warehouse(rs.getInt("id"), rs.getString("name"),
+					rs.getDouble("longitude"), rs.getDouble("latitude"));
 			rs.close();
 			pst.close();
 		} catch (SQLException e) {
@@ -283,12 +292,36 @@ public class JDBC {
 		Warehouse warehouse = new Warehouse();
 		try {
 			PreparedStatement pst = conn
-					.prepareStatement("select ID, NAME from WAREHOUSE where NAME = ?");
+					.prepareStatement("select id, name, longitude, latitude from WAREHOUSE where NAME = ?");
 			pst.setString(1, name);
 			ResultSet rs = pst.executeQuery();
 
 			rs.next();
-			warehouse = new Warehouse(rs.getInt("ID"), rs.getString("NAME"));
+			warehouse = new Warehouse(rs.getInt("id"), rs.getString("name"),
+					rs.getDouble("longitude"), rs.getDouble("latitude"));
+
+			rs.close();
+			pst.close();
+			logger.info("a warehouse got");
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+		return warehouse;
+	}
+
+	public Warehouse getFirstWarehouse() {
+		Warehouse warehouse = new Warehouse();
+		try {
+			PreparedStatement pst = conn
+					.prepareStatement("select id, name, longitude, latitude from WAREHOUSE");
+
+			ResultSet rs = pst.executeQuery();
+
+			if (rs.next())
+				warehouse = new Warehouse(rs.getInt("id"),
+						rs.getString("name"), rs.getDouble("longitude"),
+						rs.getDouble("latitude"));
 
 			rs.close();
 			pst.close();
@@ -494,8 +527,10 @@ public class JDBC {
 	public void addWarehouse(Warehouse warehouse) {
 		try {
 			PreparedStatement pst = conn
-					.prepareStatement("insert into WAREHOUSE values(warehouse_id.NEXTVAL, ?)");
+					.prepareStatement("insert into WAREHOUSE values(warehouse_id.NEXTVAL, ?, ?, ?)");
 			pst.setString(1, warehouse.getName());
+			pst.setDouble(2, warehouse.getLongitude());
+			pst.setDouble(3, warehouse.getLatitude());
 			pst.executeUpdate();
 			pst.close();
 		} catch (SQLException e) {
