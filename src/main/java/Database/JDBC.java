@@ -53,6 +53,23 @@ public class JDBC {
 			}
 		}
 	}
+	public void addlognlat(){
+		try {
+			PreparedStatement pst = conn
+					.prepareStatement("ALTER TABLE WAREHOUSE MODIFY LONGITUDE double");
+			pst.executeQuery();
+			pst.close();
+			
+			/*pst = conn
+					.prepareStatement("ALTER TABLE WAREHOUSE ADD LATITUDE double");
+			pst.executeQuery();*/
+
+			pst.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+	}
 
 	public Integer getSumPriceFromWarehouse(Warehouse warehouse) {
 

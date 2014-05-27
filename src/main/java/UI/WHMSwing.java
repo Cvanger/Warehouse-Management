@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -76,6 +77,10 @@ public class WHMSwing extends JFrame {
 	private JLabel addWlblWarehouse = new JLabel("Add Warehouse");
 	private JLabel addWlblName = new JLabel("Name:");
 	private JTextPane addWtextName = new JTextPane();
+	private JLabel addWLongName = new JLabel("Logitude:");
+	private JTextPane addWLong = new JTextPane();
+	private JLabel addWLatName = new JLabel("Latitude:");
+	private JTextPane addWLat = new JTextPane();
 	private JButton addWbtn = new JButton("Add Warehouse");
 
 	private JLabel addMlblManufacturer = new JLabel("Add Manufacturer");
@@ -100,6 +105,7 @@ public class WHMSwing extends JFrame {
 	private JButton searchBtn = new JButton("Search");
 	private JTable searchTable = new JTable();
 	private JScrollPane moveScrollPane = new JScrollPane();
+	private JCheckBox moveCheckBox = new JCheckBox("Order by distance", true);
 	private boolean rightFrom = true;
 	private boolean rightTo = true;
 
@@ -316,11 +322,23 @@ public class WHMSwing extends JFrame {
 
 		addWlblName.setBounds(30, 60, 50, 20);
 		addWarehousePanel.add(addWlblName);
+		
+		addWLongName.setBounds(30, 90, 100, 25);
+		addWarehousePanel.add(addWLongName);
+		
+		addWLatName.setBounds(30, 120, 100, 25);
+		addWarehousePanel.add(addWLatName);
+		
+		addWLong.setBounds(120, 90, 200, 20);
+		addWarehousePanel.add(addWLong);
+				
+		addWLat.setBounds(120, 120, 200, 20);
+		addWarehousePanel.add(addWLat);
 
 		addWtextName.setBounds(120, 60, 200, 20);
 		addWarehousePanel.add(addWtextName);
 
-		addWbtn.setBounds(120, 110, 200, 30);
+		addWbtn.setBounds(120, 150, 200, 30);
 		addWarehousePanel.add(addWbtn);
 		addWbtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
@@ -362,6 +380,10 @@ public class WHMSwing extends JFrame {
 		moveLblTo.setBounds(520, 20, 200, 25);
 		moveLblTo.setFont(new Font("Dialog", Font.BOLD, 20));
 		movePanel.add(moveLblTo);
+		
+		moveCheckBox.setBounds(300, 500, 30, 20);
+		movePanel.add(moveCheckBox);
+		moveCheckBox.setEnabled(true);
 
 		moveFromComboBox.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {

@@ -14,6 +14,11 @@ public class Warehouse {
 	 * Name of the warehouse.
 	 */
 	private String name;
+	
+	
+	private double longitude;
+	
+	private double latitude;
 
 	/**
 	 * Returns the name of this {@link Warehouse}.
@@ -52,6 +57,24 @@ public class Warehouse {
 		this.id = id;
 	}
 	
+	
+	
+	public double getLongitude() {
+		return longitude;
+	}
+
+	public void setLongitude(double longitude) {
+		this.longitude = longitude;
+	}
+
+	public double getLatitude() {
+		return latitude;
+	}
+
+	public void setLatitude(double latitude) {
+		this.latitude = latitude;
+	}
+
 	/**
 	 * Default constructor for creating a {@link Warehouse} class.
 	 */
